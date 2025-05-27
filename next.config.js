@@ -1,10 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
   eslint: {
     ignoreDuringBuilds: true,
   },
-  images: { unoptimized: true },
+  images: {
+    domains: ['avatars.githubusercontent.com'], // Add GitHub avatar domain for OAuth
+  },
 };
 
 module.exports = nextConfig;

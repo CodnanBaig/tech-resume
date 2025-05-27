@@ -16,8 +16,8 @@ import {
   TagLabel,
   TagCloseButton,
   Text,
-  useColorModeValue,
 } from '@chakra-ui/react'
+import isEqual from 'lodash/isEqual'
 
 interface SkillsFormProps {
   data: string[]
@@ -43,8 +43,10 @@ export default function SkillsForm({ data, updateData }: SkillsFormProps) {
   const [suggestions, setSuggestions] = useState<string[]>([])
 
   useEffect(() => {
-    updateData(skills)
-  }, [skills, updateData])
+    if (!isEqual(skills, data)) {
+      updateData(skills)
+    }
+  }, [skills, updateData, data])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -79,7 +81,9 @@ export default function SkillsForm({ data, updateData }: SkillsFormProps) {
     setSkills(skills.filter(skill => skill !== skillToRemove))
   }
 
-  const tagBg = useColorModeValue('gray.100', 'gray.700')
+  const tagBg = 'gray.700'
+  const suggestionBoxBg = 'gray.800'
+  const tagHoverBg = 'gray.700'
 
   return (
     <Stack spacing={6}>
@@ -106,7 +110,7 @@ export default function SkillsForm({ data, updateData }: SkillsFormProps) {
             borderWidth="1px"
             borderRadius="md"
             boxShadow="sm"
-            bg={useColorModeValue('white', 'gray.800')}
+            bg={suggestionBoxBg}
           >
             <Text fontSize="sm" mb={1} color="gray.500">
               Suggestions:
@@ -121,7 +125,7 @@ export default function SkillsForm({ data, updateData }: SkillsFormProps) {
                   colorScheme="blue"
                   cursor="pointer"
                   onClick={() => addSkill(suggestion)}
-                  _hover={{ bg: 'blue.100' }}
+                  _hover={{ bg: tagHoverBg }}
                 >
                   <TagLabel>{suggestion}</TagLabel>
                 </Tag>
@@ -165,7 +169,7 @@ export default function SkillsForm({ data, updateData }: SkillsFormProps) {
                 colorScheme="gray"
                 cursor="pointer"
                 onClick={() => addSkill(skill)}
-                _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+                _hover={{ bg: tagHoverBg }}
               >
                 <TagLabel>{skill}</TagLabel>
               </Tag>

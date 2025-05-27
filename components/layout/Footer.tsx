@@ -36,7 +36,6 @@ export default function Footer() {
           <Stack align="flex-start">
             <ListHeader>Product</ListHeader>
             <Link as={NextLink} href="/templates">Templates</Link>
-            <Link as={NextLink} href="/examples">Examples</Link>
             <Link as={NextLink} href="/pricing">Pricing</Link>
             <Link as={NextLink} href="/faq">FAQ</Link>
           </Stack>

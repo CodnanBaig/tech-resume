@@ -14,6 +14,7 @@ import {
   InputLeftElement,
   Stack,
   Textarea,
+  Select,
 } from '@chakra-ui/react'
 import { FiUser, FiMail, FiPhone, FiGlobe, FiGithub, FiLinkedin } from 'react-icons/fi'
 
@@ -22,31 +23,70 @@ interface PersonalInfoFormProps {
   updateData: (data: any) => void
 }
 
+const countryCityOptions = {
+  USA: ['New York', 'San Francisco', 'Los Angeles', 'Chicago'],
+  Canada: ['Toronto', 'Vancouver', 'Montreal'],
+  UK: ['London', 'Manchester', 'Birmingham'],
+  India: ['Mumbai', 'Bangalore', 'Delhi'],
+  Australia: ['Sydney', 'Melbourne', 'Brisbane'],
+}
+
 export default function PersonalInfoForm({ data, updateData }: PersonalInfoFormProps) {
-  const [formData, setFormData] = useState({
-    fullName: data.fullName || '',
-    jobTitle: data.jobTitle || '',
-    email: data.email || '',
-    phone: data.phone || '',
-    location: data.location || '',
-    website: data.website || '',
-    github: data.github || '',
-    linkedin: data.linkedin || '',
-    summary: data.summary || '',
+  const [formData, setFormData] = useState(data)
+  const [country, setCountry] = useState(() => {
+    const initial = Object.keys(countryCityOptions).find(
+      country => data.location && data.location.endsWith(country)
+    )
+    return initial || ''
   })
+  const [city, setCity] = useState(() => {
+    const initialCountry = Object.keys(countryCityOptions).find(
+      country => data.location && data.location.endsWith(country)
+    )
+    return initialCountry && data.location
+      ? data.location.replace(`, ${initialCountry}`, '')
+      : ''
+  })
+
+  useEffect(() => {
+    setFormData(data)
+    // Only update local state if data.location actually changed
+    if (data.location !== formData.location) {
+      const foundCountry = Object.keys(countryCityOptions).find(country =>
+        data.location && data.location.endsWith(country)
+      ) || ''
+      const foundCity = foundCountry ? data.location.replace(`, ${foundCountry}`, '') : ''
+      setCountry(foundCountry)
+      setCity(foundCity)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.location])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData({
-      ...formData,
-      [name]: value,
-    })
+    const updated = { ...formData, [name]: value }
+    setFormData(updated)
+    updateData(updated)
   }
 
-  // Save data when form changes
-  useEffect(() => {
-    updateData(formData)
-  }, [formData, updateData])
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCountry = e.target.value
+    setCountry(newCountry)
+    setCity('')
+    const location = newCountry ? (city ? `${city}, ${newCountry}` : newCountry) : ''
+    const updated = { ...formData, location }
+    setFormData(updated)
+    updateData(updated)
+  }
+
+  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCity = e.target.value
+    setCity(newCity)
+    const location = country ? (newCity ? `${newCity}, ${country}` : country) : ''
+    const updated = { ...formData, location }
+    setFormData(updated)
+    updateData(updated)
+  }
 
   return (
     <Stack spacing={6}>
@@ -114,15 +154,24 @@ export default function PersonalInfoForm({ data, updateData }: PersonalInfoFormP
         </FormControl>
       </Grid>
 
-      <FormControl id="location">
-        <FormLabel>Location</FormLabel>
-        <Input
-          name="location"
-          placeholder="San Francisco, CA"
-          value={formData.location}
-          onChange={handleChange}
-        />
-      </FormControl>
+      <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
+        <FormControl id="country">
+          <FormLabel>Country</FormLabel>
+          <Select placeholder="Select country" value={country} onChange={handleCountryChange}>
+            {Object.keys(countryCityOptions).map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl id="city" isDisabled={!country}>
+          <FormLabel>City</FormLabel>
+          <Select placeholder="Select city" value={city} onChange={handleCityChange}>
+            {country && countryCityOptions[country as keyof typeof countryCityOptions].map((cty: string) => (
+              <option key={cty} value={cty}>{cty}</option>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
 
       <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={4}>
         <FormControl id="website">

@@ -19,6 +19,7 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react'
 import { FiPlus, FiTrash2, FiArrowUp, FiArrowDown } from 'react-icons/fi'
+import isEqual from 'lodash/isEqual'
 
 interface Project {
   id: string
@@ -40,8 +41,10 @@ export default function ProjectsForm({ data, updateData }: ProjectsFormProps) {
   )
 
   useEffect(() => {
-    updateData(projects)
-  }, [projects, updateData])
+    if (!isEqual(projects, data)) {
+      updateData(projects)
+    }
+  }, [projects, updateData, data])
 
   function createNewProject(): Project {
     return {
@@ -225,7 +228,14 @@ export default function ProjectsForm({ data, updateData }: ProjectsFormProps) {
   )
 }
 
-function Flex({ children, justifyContent, alignItems, mb }) {
+interface FlexProps {
+  children: React.ReactNode
+  justifyContent: string
+  alignItems: string
+  mb: number
+}
+
+function Flex({ children, justifyContent, alignItems, mb }: FlexProps) {
   return (
     <Box 
       display="flex" 

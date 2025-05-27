@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Box, 
   Button, 
@@ -17,44 +17,66 @@ import {
   Text, 
   useColorMode, 
   useColorModeValue, 
-  useDisclosure 
+  useDisclosure,
+  Avatar,
+  MenuDivider
 } from '@chakra-ui/react'
-import { FiMenu, FiX, FiMoon, FiSun, FiCode } from 'react-icons/fi'
+import { FiMenu, FiX, FiMoon, FiSun, FiCode, FiUser, FiLogOut } from 'react-icons/fi'
 import NextLink from 'next/link'
+import { useAuth } from '@/app/contexts/AuthContext'
 
 const Links = [
   { name: 'Templates', href: '/templates' },
   { name: 'Builder', href: '/builder' },
-  { name: 'Examples', href: '/examples' },
 ]
 
 const Header = () => {
   const { isOpen, onToggle } = useDisclosure()
   const { colorMode, toggleColorMode } = useColorMode()
   const [scrolled, setScrolled] = useState(false)
+  const { user, logout } = useAuth()
+  const [mounted, setMounted] = useState(false)
 
-  // Handle scroll effect for header
-  if (typeof window !== 'undefined') {
-    window.addEventListener('scroll', () => {
+  useEffect(() => {
+    setMounted(true)
+    const handleScroll = () => {
       if (window.scrollY > 20) {
         setScrolled(true)
       } else {
         setScrolled(false)
       }
-    })
-  }
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
-  const bgColor = useColorModeValue(
+  // Always call hooks at the top level
+  const hoverBgValue = useColorModeValue('gray.100', 'gray.700')
+  const avatarBgValue = useColorModeValue('brand.500', 'brand.400')
+  const headerBgValue = useColorModeValue(
     scrolled ? 'white' : 'transparent',
     scrolled ? 'gray.900' : 'transparent'
   )
-  
-  const borderColor = useColorModeValue(
+  const borderColorValue = useColorModeValue(
     scrolled ? 'gray.200' : 'transparent',
     scrolled ? 'gray.700' : 'transparent'
   )
+  const textColorValue = useColorModeValue('gray.800', 'white')
 
-  const textColor = useColorModeValue('gray.800', 'white')
+  // Use these only after mount to avoid SSR mismatch
+  const hoverBg = mounted ? hoverBgValue : undefined
+  const avatarBg = mounted ? avatarBgValue : undefined
+  const headerBg = mounted ? headerBgValue : undefined
+  const borderColor = mounted ? borderColorValue : undefined
+  const textColor = mounted ? textColorValue : undefined
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
 
   return (
     <Box
@@ -62,7 +84,7 @@ const Header = () => {
       position="fixed"
       w="100%"
       zIndex={1000}
-      bg={bgColor}
+      bg={headerBg}
       borderBottom={scrolled ? '1px' : '0'}
       borderColor={borderColor}
       transition="all 0.3s ease"
@@ -78,7 +100,7 @@ const Header = () => {
               <HStack spacing={2}>
                 <Box 
                   p={1.5} 
-                  bg={useColorModeValue('brand.500', 'brand.400')} 
+                  bg={avatarBg}
                   color="white" 
                   borderRadius="md"
                 >
@@ -111,7 +133,7 @@ const Header = () => {
                   color={textColor}
                   _hover={{
                     textDecoration: 'none',
-                    bg: useColorModeValue('gray.100', 'gray.700'),
+                    bg: hoverBg,
                   }}
                 >
                   {link.name}
@@ -129,14 +151,41 @@ const Header = () => {
               mr={4}
             />
             
-            <HStack spacing={4} display={{ base: 'none', md: 'flex' }}>
-              <Button as={NextLink} href="/login" variant="ghost">
-                Sign In
-              </Button>
-              <Button as={NextLink} href="/signup" colorScheme="blue">
-                Sign Up
-              </Button>
-            </HStack>
+            {user ? (
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  rounded="full"
+                  variant="link"
+                  cursor="pointer"
+                  minW={0}
+                >
+                  <Avatar
+                    size="sm"
+                    name={user.name}
+                    bg={avatarBg}
+                  />
+                </MenuButton>
+                <MenuList>
+                  <MenuItem icon={<FiUser />} as={NextLink} href="/profile">
+                    Profile
+                  </MenuItem>
+                  <MenuDivider />
+                  <MenuItem icon={<FiLogOut />} onClick={handleLogout}>
+                    Sign Out
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            ) : (
+              <HStack spacing={4} display={{ base: 'none', md: 'flex' }}>
+                <Button as={NextLink} href="/login" variant="ghost">
+                  Sign In
+                </Button>
+                <Button as={NextLink} href="/signup" colorScheme="blue">
+                  Sign Up
+                </Button>
+              </HStack>
+            )}
 
             <IconButton
               display={{ base: 'flex', md: 'none' }}
@@ -165,43 +214,80 @@ const Header = () => {
                   color={textColor}
                   _hover={{
                     textDecoration: 'none',
-                    bg: useColorModeValue('gray.100', 'gray.700'),
+                    bg: hoverBg,
                   }}
                 >
                   {link.name}
                 </Link>
               ))}
-              <Link
-                as={NextLink}
-                href="/login"
-                px={2}
-                py={2}
-                rounded="md"
-                fontWeight="medium"
-                color={textColor}
-                _hover={{
-                  textDecoration: 'none',
-                  bg: useColorModeValue('gray.100', 'gray.700'),
-                }}
-              >
-                Sign In
-              </Link>
-              <Link
-                as={NextLink}
-                href="/signup"
-                px={2}
-                py={2}
-                rounded="md"
-                fontWeight="medium"
-                color="white"
-                bg="brand.500"
-                _hover={{
-                  textDecoration: 'none',
-                  bg: 'brand.600',
-                }}
-              >
-                Sign Up
-              </Link>
+              {user ? (
+                <>
+                  <Link
+                    as={NextLink}
+                    href="/profile"
+                    px={2}
+                    py={2}
+                    rounded="md"
+                    fontWeight="medium"
+                    color={textColor}
+                    _hover={{
+                      textDecoration: 'none',
+                      bg: hoverBg,
+                    }}
+                  >
+                    Profile
+                  </Link>
+                  <Button
+                    onClick={handleLogout}
+                    variant="ghost"
+                    w="full"
+                    justifyContent="flex-start"
+                    px={2}
+                    py={2}
+                    fontWeight="medium"
+                    color={textColor}
+                    _hover={{
+                      bg: hoverBg,
+                    }}
+                  >
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    as={NextLink}
+                    href="/login"
+                    px={2}
+                    py={2}
+                    rounded="md"
+                    fontWeight="medium"
+                    color={textColor}
+                    _hover={{
+                      textDecoration: 'none',
+                      bg: hoverBg,
+                    }}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    as={NextLink}
+                    href="/signup"
+                    px={2}
+                    py={2}
+                    rounded="md"
+                    fontWeight="medium"
+                    color="white"
+                    bg="brand.500"
+                    _hover={{
+                      textDecoration: 'none',
+                      bg: 'brand.600',
+                    }}
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </Stack>
           </Box>
         )}

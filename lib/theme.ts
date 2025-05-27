@@ -4,8 +4,8 @@ import type { StyleFunctionProps } from '@chakra-ui/styled-system'
 
 const theme = extendTheme({
   config: {
-    initialColorMode: 'system',
-    useSystemColorMode: true,
+    initialColorMode: 'dark',
+    useSystemColorMode: false,
   },
   fonts: {
     heading: 'Inter, sans-serif',

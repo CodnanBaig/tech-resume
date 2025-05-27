@@ -19,6 +19,7 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react'
 import { FiPlus, FiTrash2, FiArrowUp, FiArrowDown } from 'react-icons/fi'
+import isEqual from 'lodash/isEqual'
 
 interface Experience {
   id: string
@@ -42,8 +43,10 @@ export default function ExperienceForm({ data, updateData }: ExperienceFormProps
   )
 
   useEffect(() => {
-    updateData(experiences)
-  }, [experiences, updateData])
+    if (!isEqual(experiences, data)) {
+      updateData(experiences)
+    }
+  }, [experiences, updateData, data])
 
   function createNewExperience(): Experience {
     return {
@@ -239,7 +242,17 @@ export default function ExperienceForm({ data, updateData }: ExperienceFormProps
   )
 }
 
-function Flex({ children, justifyContent, alignItems, mb }) {
+function Flex({ 
+  children, 
+  justifyContent, 
+  alignItems, 
+  mb 
+}: {
+  children: React.ReactNode;
+  justifyContent?: string;
+  alignItems?: string;
+  mb?: string | number;
+}) {
   return (
     <Box 
       display="flex" 
